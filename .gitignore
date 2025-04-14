@@ -1,0 +1,6 @@
+# File needs to ignore
+.DS_Store
+__pycache__
+
+# To prevent WEBHOOK URL leakage
+webhook.conf
