@@ -2,6 +2,7 @@ from cisa_kev import *
 from webhook_push import *
 from logger import init_logger
 from datetime import datetime
+import cisa_kev_db as kev_db 
 
 # Initialize logging
 log = init_logger()
@@ -47,6 +48,9 @@ def main():
     elif new_kevs:
         log.info(f"🚨 Found {len(new_kevs)} new KEVs")
         send_notifications(new_kevs, webhooks)
+        kev_db.insert_kevs_to_db(SQLITE_DB, new_kevs)
+        log.info(f"New KEVs added to DB")
+
     else:
         log.info("✅ No new KEVs detected")
 

@@ -2,6 +2,8 @@ import requests
 import json
 import os
 from logger import init_logger
+import cisa_kev_db as kev_db
+
 
 # CISA KEV API Endpoint
 URL_CISA_KEV_JSON = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
@@ -13,6 +15,9 @@ KEV_FILE = os.path.join(STORAGE_LOCATION,FILENAME)
 LOG_DIR = "log"
 LOG_FILE = "cisa_kev.log"
 log = init_logger(LOG_DIR, LOG_FILE)
+
+# DB Path
+SQLITE_DB = os.path.join(STORAGE_LOCATION, "kev_data.db")
 
 def fetch_kev_data():
     try:
@@ -38,6 +43,7 @@ def transform_kevs(json_data):
         }
         kevs = json_data.get('vulnerabilities',[])
 
+        # Extract the fields from 1st data structure
         fields = list(kevs[0].keys())
         for item in kevs:
             row = {field: item.get(field, '') for field in fields}
@@ -70,6 +76,12 @@ def download_kevs(is_update = False):
         return
     
     save_kevs(json_data)
+    if not is_update:
+        kev_db.init_db(SQLITE_DB)
+        props, kevs = transform_kevs(json_data)
+        kev_db.insert_kevs_to_db(SQLITE_DB, kevs)
+        kev_db.update_properties(SQLITE_DB, props)
+        log.info(f"KEVs data written to database")
 
 
 def load_seen_kevs():
