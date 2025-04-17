@@ -8,7 +8,7 @@ CONFIG_DIR = "config"
 WEBHOOK_CONFIG_FILE = os.path.join(CONFIG_DIR, "webhook.conf")
 
 
-def load_webhooks():
+def load_webhook():
     webhooks = {}
     os.makedirs(CONFIG_DIR, exist_ok=True)
     
@@ -46,7 +46,7 @@ def load_webhooks():
 
     return webhooks
 
-def send_notifications(new_kevs, webhooks):
+def send_notification(new_kevs, webhooks):
     if not new_kevs:
         log.info("No new KEVs to notify")
         return
@@ -64,7 +64,7 @@ def send_notifications(new_kevs, webhooks):
         try:
             response = requests.post(webhook, json=payload)
             if response.status_code == 200:
-                log.info(f"Notification sent successfully to {app}")
+                log.info(f"🔔 Notification sent successfully to {app}")
             else:
                 log.warning(f"Failed to send notification to {app}: {response.status_code}")
         except requests.RequestException as e:

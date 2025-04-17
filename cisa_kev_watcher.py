@@ -1,5 +1,5 @@
 from cisa_kev import fetch_kev_data, download_kevs, load_seen_kevs, transform_kevs
-from webhook_push import send_notifications, load_webhooks
+from webhook_push import send_notification, load_webhook
 from logger import init_logger
 from config.Config import SQLITE_DB
 import cisa_kev_db as kev_db
@@ -16,7 +16,7 @@ def is_new_release(prev_date, latest_date):
         log.error(f"Date comparison failed: {E}")
         return False
 
-def check_new_kevs():
+def check_new_kev():
     previous_props, previous_kevs = transform_kevs(load_seen_kevs())
     if not previous_kevs:
         download_kevs()
@@ -35,18 +35,18 @@ def check_new_kevs():
 
     return []
 
-def main():
-    webhooks = load_webhooks()
-    new_kevs = check_new_kevs()
+def alert_new_kev():
+    webhooks = load_webhook()
+    new_kevs = check_new_kev()
     if new_kevs is None:
         return
     elif new_kevs:
         log.info(f"🚨 Found {len(new_kevs)} new KEVs")
-        send_notifications(new_kevs, webhooks)
+        send_notification(new_kevs, webhooks)
         kev_db.insert_kevs_to_db(SQLITE_DB, new_kevs)
         log.info(f"New KEVs added to DB")
     else:
         log.info("✅ No new KEVs detected")
 
 if __name__ == "__main__":
-    main()
+    alert_new_kev()
