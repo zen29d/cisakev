@@ -1,6 +1,10 @@
 # File needs to ignore
 .DS_Store
 __pycache__
+__ztest
+local
+log
+
 
 # To prevent WEBHOOK URL leakage
 webhook.conf

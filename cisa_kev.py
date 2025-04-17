@@ -2,29 +2,18 @@ import requests
 import json
 import os
 from logger import init_logger
+from config.Config import STORAGE_LOCATION, CATALOG_FILE, SQLITE_DB, LOG_FILE
 import cisa_kev_db as kev_db
 
-
-# CISA KEV API Endpoint
 URL_CISA_KEV_JSON = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
-STORAGE_LOCATION = "local"
-FILENAME = "cisa_kevs_catalog.json"
-KEV_FILE = os.path.join(STORAGE_LOCATION,FILENAME)
 
-# Initialize logging
-LOG_DIR = "log"
-LOG_FILE = "cisa_kev.log"
-log = init_logger(LOG_DIR, LOG_FILE)
-
-# DB Path
-SQLITE_DB = os.path.join(STORAGE_LOCATION, "kev_data.db")
+log = init_logger(LOG_FILE)
 
 def fetch_kev_data():
     try:
         response = requests.get(URL_CISA_KEV_JSON, timeout=5)
         if response.status_code == 200:
-            data = response.json()
-            return data
+            return response.json()
         else:
             log.warning(f"Unexpected response status: {response.status_code}")
     except requests.RequestException as E:
@@ -41,26 +30,24 @@ def transform_kevs(json_data):
             'dateReleased': json_data.get('dateReleased', ''),
             'count': json_data.get('count', '')
         }
-        kevs = json_data.get('vulnerabilities',[])
+        kevs = json_data.get('vulnerabilities', [])
 
-        # Extract the fields from 1st data structure
-        fields = list(kevs[0].keys())
-        for item in kevs:
-            row = {field: item.get(field, '') for field in fields}
-            kev_rows.append(row)
-        
+        if kevs:
+            fields = list(kevs[0].keys())
+            for item in kevs:
+                row = {field: item.get(field, '') for field in fields}
+                kev_rows.append(row)
+
     return [properties, kev_rows]
-
 
 def save_kevs(json_data):
     try:
-        with open(KEV_FILE, "w", encoding="utf-8") as f:
+        with open(CATALOG_FILE, "w", encoding="utf-8") as f:
             json.dump(json_data, f, indent=2)
     except Exception as E:
         log.error(f"Error saving KEV JSON data: {E}")
 
-
-def download_kevs(is_update = False):
+def download_kevs(is_update=False):
     try:
         os.makedirs(STORAGE_LOCATION, exist_ok=True)
     except Exception as E:
@@ -74,33 +61,30 @@ def download_kevs(is_update = False):
     if not json_data:
         log.warning("No KEV data fetched from CISA")
         return
-    
+
     save_kevs(json_data)
     if not is_update:
         kev_db.init_db(SQLITE_DB)
         props, kevs = transform_kevs(json_data)
         kev_db.insert_kevs_to_db(SQLITE_DB, kevs)
-        kev_db.update_properties(SQLITE_DB, props)
-        log.info(f"KEVs data written to database")
-
+        kev_db.insert_properties(SQLITE_DB, props)
+        log.info(f"KEVs data written to DB")
 
 def load_seen_kevs():
-    if not os.path.exists(KEV_FILE):
-        log.warning(f"File {KEV_FILE} doesn't exist")
+    if not os.path.exists(CATALOG_FILE):
+        log.warning(f"File {CATALOG_FILE} doesn't exist")
         return []
     try:
-        with open(KEV_FILE, "r", newline="", encoding="utf-8") as file:
+        with open(CATALOG_FILE, "r", newline="", encoding="utf-8") as file:
             return json.load(file)
     except Exception as E:
         log.error(f"Error loading previous KEV data: {E}")
         return []
 
-
-# Main Test function
 def main():
     log.info(f"Test Start: {__name__}")
     download_kevs()
-    log.info(f"Loading downloaded KEVs data from {KEV_FILE}")
+    log.info(f"Loading downloaded KEVs data from {CATALOG_FILE}")
     json_data = load_seen_kevs()
     properties, kevs = transform_kevs(json_data)
     print(properties)
