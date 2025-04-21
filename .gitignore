@@ -1,10 +1,12 @@
-# File needs to ignore
+# System files needs to ignore
 .DS_Store
-__pycache__
-__ztest
 local
 log
+pyproject.toml
 
-
-# To prevent WEBHOOK URL leakage
-webhook.conf
+# python files to ignore
+*.pyc
+__pycache__/
+*.pkl
+dist/
+build/

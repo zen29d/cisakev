@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["cisakev"]
+
+[project]
+name = "cisakev"
+version = "1.0.0_alpha"
+description = "CLI tool for interacting with the CISA Known Exploited Vulnerabilities (KEV) catalog"
+authors = [
+    {name = "Zen (binarypanda)" }
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.7"
+
+dependencies = [
+    "tabulate",
+    "requests"
+]
+
+[project.urls]
+Homepage = "https://github.com/zen29d/cisakev"
+
+[project.scripts]
+cisakev = "cisa_kev_cli:main"

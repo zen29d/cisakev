@@ -73,11 +73,21 @@ Or add to cron:
   - Exploitability metrics
 
 
-- [ ] **Queryable Data Store**  
+- [x] **Queryable Data Store**  
   Store KEVs in SQLite/JSON to support:
   - CLI queries by CVE ID, vendor, date, etc.
   - Generate cli stats
   - Export filtered data
+
+> [!CAUTION]
+> As of nor cisakev command is not active, instead use cisa_kev_cli.py
+
+#### Usage
+```bash
+python3 cisa_kev_cli.py
+```
+![CLI](media/cli.png)
+
 
 - [ ] **Public PoC Scraper**  
   Automatically search for PoCs linked to each KEV using:

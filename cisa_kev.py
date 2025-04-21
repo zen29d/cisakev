@@ -1,15 +1,17 @@
 import requests
 import json
 import os
+import hashlib
 from logger import init_logger
-from config.Config import STORAGE_LOCATION, CATALOG_FILE, SQLITE_DB, LOG_FILE
+from Base import STORAGE_LOCATION, CATALOG_FILE, SQLITE_DB, LOG_FILE
 import cisa_kev_db as kev_db
 
 URL_CISA_KEV_JSON = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 
 log = init_logger(LOG_FILE)
 
-def fetch_kev_data():
+
+def fetch_catalog_data():
     try:
         response = requests.get(URL_CISA_KEV_JSON, timeout=5)
         if response.status_code == 200:
@@ -20,7 +22,8 @@ def fetch_kev_data():
         log.error(f"Failed to fetch CISA KEV data: {E}")
     return None
 
-def transform_kevs(json_data):
+
+def transform_catalog(json_data):
     properties = {}
     kev_rows = []
     if json_data:
@@ -40,37 +43,16 @@ def transform_kevs(json_data):
 
     return [properties, kev_rows]
 
-def save_kevs(json_data):
+
+def save_catalog(json_data):
     try:
         with open(CATALOG_FILE, "w", encoding="utf-8") as f:
             json.dump(json_data, f, indent=2)
     except Exception as E:
         log.error(f"Error saving KEV JSON data: {E}")
 
-def download_kevs(is_update=False):
-    try:
-        os.makedirs(STORAGE_LOCATION, exist_ok=True)
-    except Exception as E:
-        log.error(f"❌ Failed to create storage directory: {E}")
-        return
 
-    action = "Updating" if is_update else "Downloading"
-    log.info(f"{action} CISA KEV Catalog...")
-
-    json_data = fetch_kev_data()
-    if not json_data:
-        log.warning("No KEV data fetched from CISA")
-        return
-
-    save_kevs(json_data)
-    if not is_update:
-        kev_db.init_db(SQLITE_DB)
-        props, kevs = transform_kevs(json_data)
-        kev_db.insert_kevs_to_db(SQLITE_DB, kevs)
-        kev_db.insert_properties(SQLITE_DB, props)
-        log.info(f"KEVs data written to DB")
-
-def load_seen_kevs():
+def load_seen_catalog():
     if not os.path.exists(CATALOG_FILE):
         log.warning(f"File {CATALOG_FILE} doesn't exist")
         return []
@@ -81,14 +63,77 @@ def load_seen_kevs():
         log.error(f"Error loading previous KEV data: {E}")
         return []
 
-def main():
-    log.info(f"Test Start: {__name__}")
-    download_kevs()
-    log.info(f"Loading downloaded KEVs data from {CATALOG_FILE}")
-    json_data = load_seen_kevs()
-    properties, kevs = transform_kevs(json_data)
-    print(properties)
-    log.info(f"Test End: {__name__}")
+
+def get_file_catalog_ver():
+    json_data = load_seen_catalog()
+    if json_data:
+        version = json_data.get('catalogVersion', '')
+        return version
+    return None
+
+
+def get_file_hash(file):
+    sha = hashlib.sha256()
+    try:
+        with open(file, "rb") as f:
+            while chunk := f.read(8192):
+                sha.update(chunk)
+        return sha.hexdigest()
+    except Exception as E:
+        log.error(f"Failed to hash file {file}: {E}")
+        return None
+
+
+def download_catalog():
+    try:
+        os.makedirs(STORAGE_LOCATION, exist_ok=True)
+    except Exception as e:
+        log.error(f"Failed to create storage directory: {e}")
+        return
+
+    json_data = fetch_catalog_data()
+    if not json_data:
+        log.warning("No KEV data fetched from CISA")
+        return
+
+    new_version = json_data.get("catalogVersion")
+    if not new_version:
+        log.warning("No catalogVersion found in KEV data.")
+        return
+
+    # Only init DB if it doesjmn't exist
+    if not kev_db.db_exists(SQLITE_DB):
+        kev_db.init_db(SQLITE_DB)
+
+    file_version = get_file_catalog_ver()
+    db_version = kev_db.get_db_catalog_ver(SQLITE_DB)
+
+    # Check version matches
+    if new_version == file_version and new_version == db_version:
+        log.info(f"KEV data is already up-to-date (version: {new_version})")
+        return
+
+    log.info(f"Downloading CISA KEV Catalog (version: {new_version})...")
+
+    save_catalog(json_data)
+    props, kevs = transform_catalog(json_data)
+    props['catalog_hash'] = get_file_hash(CATALOG_FILE)
+    kev_db.insert_kevs_to_db(SQLITE_DB, kevs)
+    kev_db.insert_properties(SQLITE_DB, props)
+
+    log.info(f"KEVs data written to DB (version: {new_version})")
+
+
+def test_cisa_catalog():
+    log.info(f"Test Start...")
+    download_catalog()
+    log.info(f"Loading KEVs data from {CATALOG_FILE}")
+    json_data = load_seen_catalog()
+    properties, _ = transform_catalog(json_data)
+    for key,value in properties.items():
+        print(f"  {key}: {value}")
+    log.info(f"Test End...")
+
 
 if __name__ == "__main__":
-    main()
+    test_cisa_catalog()
