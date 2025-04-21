@@ -86,6 +86,9 @@ Or add to cron:
 ```bash
 python3 cisa_kev_cli.py
 ```
+![CLI](media/cli_help.png)
+
+#### Example
 ![CLI](media/cli.png)
 
 
