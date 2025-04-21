@@ -32,24 +32,24 @@ def show_help():
                   [blue]--update[/blue]       Refresh the local KEV database and display newly added KEVs.
 
   [green]list[/green]         List filtered KEVs from the local database.
-                  [blue]--cve[/blue] <TEXT>     Filter by CVE ID (supports wildcard: e.g. CVE-2023-*)
+                  [blue]--cve[/blue] <TEXT>     Filter by CVE ID (supports wildcard: e.g. CVE-2023, 2024-30088)
                   [blue]--vendor[/blue] <TEXT>  Filter by vendor/project name.
                   [blue]--year[/blue] <TEXT>    Filter by year range: 2024, 2023-, 2022+, 2021-2022
                   [blue]--limit[/blue] <INTEGER | all>  Max number of results (use 'all' to show everything). Default: 5
 
   [green]export[/green]       Export filtered KEVs to a file.
-                  [blue]--cve[/blue] <TEXT>     Filter by CVE ID (supports wildcard: e.g. CVE-2023-*)
+                  [blue]--cve[/blue] <TEXT>     Filter by CVE ID (supports wildcard: e.g. CVE-2023, 2024-30088)
                   [blue]--vendor[/blue] <TEXT>  Filter by vendor/project name.
                   [blue]--year[/blue] <TEXT>    Filter by year range: 2024, 2023-, 2022+, 2021-2022
                   [blue]--limit[/blue] <INTEGER | all>  Max number of results (use 'all' for no limit). Default: 50
                   [blue]--output[/blue] <PATH>    Output file path (e.g. results.json or results.csv). [required]
-                  [blue]--format[/blue] <[json|csv]> Output format. Default: json
+                  [blue]--format[/blue] <csv | json> Output format. Default: csv
 
 [bold]EXAMPLES[/bold]
   cisakev db --download
   cisakev db --update
   cisakev list --vendor microsoft --year 2023+ --limit 10
-  cisakev export --cve CVE-2023-* --output export.json --format json
+  cisakev export --cve CVE-2025 --output export.csv  --format csv --limit all
 """
     )
 
@@ -75,8 +75,8 @@ def handle_list(args):
     except ValueError:
         console.print("[red]Invalid limit value.  Must be an integer or 'all'.[/red]")
         sys.exit(1)
-    except Exception as e:
-        console.print(f"[red]An unexpected error occurred: {e}[/red]")
+    except Exception as E:
+        console.print(f"[red]An unexpected error occurred: {E}[/red]")
         sys.exit(1)
 
 
