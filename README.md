@@ -80,7 +80,7 @@ Or add to cron:
   - Export filtered data
 
 > [!CAUTION]
-> As of nor cisakev command is not active, instead use cisa_kev_cli.py
+> 'cisakev' CLI entry point is not yet active; use 'cisa_kev_cli.py' instead.
 
 #### Usage
 ```bash
