@@ -129,7 +129,7 @@ cisakev --help
 
 #### Example Output
 
-![CLI Output](media/cli.png)
+![CLI Output](media/cli_list.png)
 
 
 
