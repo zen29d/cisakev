@@ -1,13 +1,12 @@
 from datetime import datetime
 
-from Base import SQLITE_DB
-from cisa_kev import fetch_catalog_data, save_catalog, download_catalog, load_seen_catalog, transform_catalog
-import webhook_push as whook
-import cisa_kev_db as kev_db
+from cisakev import Base
+from cisakev import kev
+import cisakev.notify as whook
+from cisakev import dbmanager as dbm
+from cisakev import logger
 
-from logger import init_logger
-
-log = init_logger()
+log = logger.init_logger()
 
 def is_new_release(prev_date, latest_date):
     try:
@@ -19,24 +18,24 @@ def is_new_release(prev_date, latest_date):
         return False
 
 def check_new_kev():
-    previous_props, previous_kevs = transform_catalog(load_seen_catalog())
+    previous_props, previous_kevs = kev.transform_catalog(kev.load_seen_catalog())
     if not previous_kevs:
-        download_catalog()
+        kev.download_catalog()
         return None
 
-    latest_json = fetch_catalog_data()
+    latest_json = kev.fetch_catalog_data()
     if not latest_json:
         log.warning("No KEV data fetched")
         return None
 
-    latest_props, latest_kevs = transform_catalog(latest_json)
+    latest_props, latest_kevs = kev.transform_catalog(latest_json)
 
     if is_new_release(previous_props['dateReleased'], latest_props['dateReleased']):
         previous_ids = {kev["cveID"] for kev in previous_kevs}
         new_items = [kev for kev in latest_kevs if kev["cveID"] not in previous_ids]
         log.info(f"🚨 Found {len(new_items)} new KEVs")
-        save_catalog(latest_json)
-        kev_db.insert_kevs_to_db(SQLITE_DB, new_items)
+        kev.save_catalog(latest_json)
+        dbm.insert_kevs_to_db(Base.DB_FILE, new_items)
         return new_items
 
     return []

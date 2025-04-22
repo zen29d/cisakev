@@ -2,13 +2,13 @@ import requests
 import json
 import os
 import hashlib
-from logger import init_logger
-from Base import STORAGE_LOCATION, CATALOG_FILE, SQLITE_DB, LOG_FILE
-import cisa_kev_db as kev_db
+from cisakev import logger
+from cisakev import Base
+import cisakev.dbmanager as dbm
 
 URL_CISA_KEV_JSON = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 
-log = init_logger(LOG_FILE)
+log = logger.init_logger(Base.LOG_FILE)
 
 
 def fetch_catalog_data():
@@ -46,18 +46,18 @@ def transform_catalog(json_data):
 
 def save_catalog(json_data):
     try:
-        with open(CATALOG_FILE, "w", encoding="utf-8") as f:
+        with open(Base.CATALOG_FILE, "w", encoding="utf-8") as f:
             json.dump(json_data, f, indent=2)
     except Exception as E:
         log.error(f"Error saving KEV JSON data: {E}")
 
 
 def load_seen_catalog():
-    if not os.path.exists(CATALOG_FILE):
-        log.warning(f"File {CATALOG_FILE} doesn't exist")
+    if not os.path.exists(Base.CATALOG_FILE):
+        log.warning(f"File {Base.CATALOG_FILE} doesn't exist")
         return []
     try:
-        with open(CATALOG_FILE, "r", newline="", encoding="utf-8") as file:
+        with open(Base.CATALOG_FILE, "r", newline="", encoding="utf-8") as file:
             return json.load(file)
     except Exception as E:
         log.error(f"Error loading previous KEV data: {E}")
@@ -86,7 +86,7 @@ def get_file_hash(file):
 
 def download_catalog():
     try:
-        os.makedirs(STORAGE_LOCATION, exist_ok=True)
+        os.makedirs(Base.LOCAL, exist_ok=True)
     except Exception as e:
         log.error(f"Failed to create storage directory: {e}")
         return
@@ -102,11 +102,11 @@ def download_catalog():
         return
 
     # Only init DB if it doesjmn't exist
-    if not kev_db.db_exists(SQLITE_DB):
-        kev_db.init_db(SQLITE_DB)
+    if not dbm.db_exists(Base.DB_FILE):
+        dbm.init_db(Base.DB_FILE)
 
     file_version = get_file_catalog_ver()
-    db_version = kev_db.get_db_catalog_ver(SQLITE_DB)
+    db_version = dbm.get_db_catalog_ver(Base.DB_FILE)
 
     # Check version matches
     if new_version == file_version and new_version == db_version:
@@ -117,9 +117,9 @@ def download_catalog():
 
     save_catalog(json_data)
     props, kevs = transform_catalog(json_data)
-    props['catalog_hash'] = get_file_hash(CATALOG_FILE)
-    kev_db.insert_kevs_to_db(SQLITE_DB, kevs)
-    kev_db.insert_properties(SQLITE_DB, props)
+    props['catalog_hash'] = get_file_hash(Base.CATALOG_FILE)
+    dbm.insert_kevs_to_db(Base.DB_FILE, kevs)
+    dbm.insert_properties(Base.DB_FILE, props)
 
     log.info(f"KEVs data written to DB (version: {new_version})")
 
@@ -127,7 +127,7 @@ def download_catalog():
 def test_cisa_catalog():
     log.info(f"Test Start...")
     download_catalog()
-    log.info(f"Loading KEVs data from {CATALOG_FILE}")
+    log.info(f"Loading KEVs data from {Base.CATALOG_FILE}")
     json_data = load_seen_catalog()
     properties, _ = transform_catalog(json_data)
     for key,value in properties.items():

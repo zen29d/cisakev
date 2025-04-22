@@ -18,11 +18,12 @@ requires-python = ">=3.7"
 
 dependencies = [
     "tabulate",
-    "requests"
+    "requests",
+    "rich"
 ]
 
 [project.urls]
 Homepage = "https://github.com/zen29d/cisakev"
 
 [project.scripts]
-cisakev = "cisa_kev_cli:main"
+cisakev = "cisakev.cli:main"

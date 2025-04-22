@@ -6,14 +6,14 @@ import csv
 from rich.console import Console
 
 # cisa_kev* modules
-from cisa_kev import download_catalog 
-from cisa_kev_query import query_kevs, pretty_print_kevs, convert_wildcard, convert_year
-from cisa_kev_watcher import check_new_kev
-import cisa_kev_db as kev_db 
-from Base import SQLITE_DB 
-from logger import init_logger 
+from cisakev.kev import download_catalog 
+import cisakev.dbquery as dbq
+from cisakev.watcher import check_new_kev
+import cisakev.dbmanager as dbm
+from cisakev import Base
+from cisakev import logger 
 
-log = init_logger()
+log = logger.init_logger()
 console = Console()
 
 def show_help():
@@ -55,23 +55,23 @@ def show_help():
 
 
 def handle_list(args):
-    if not os.path.exists(SQLITE_DB):
+    if not os.path.exists(Base.DB_FILE):
         if not prompt_download():
             return
     try:
         limit = None if args.limit == "all" else int(args.limit)
-        cve_id = convert_wildcard(args.cve)
-        date_from, date_to = convert_year(args.year)
+        cve_id = dbq.convert_wildcard(args.cve)
+        date_from, date_to = dbq.convert_year(args.year)
 
-        kevs = query_kevs(
-            SQLITE_DB,
+        kevs = dbq.query_kevs(
+            Base.DB_FILE,
             cve_id=cve_id,
             vendor=args.vendor,
             since_date=date_from,
             until_date=date_to,
             limit=limit,
         )
-        pretty_print_kevs(kevs)
+        dbq.pretty_print_kevs(kevs)
     except ValueError:
         console.print("[red]Invalid limit value.  Must be an integer or 'all'.[/red]")
         sys.exit(1)
@@ -81,17 +81,17 @@ def handle_list(args):
 
 
 def handle_export(args):
-    if not os.path.exists(SQLITE_DB):
+    if not os.path.exists(Base.DB_FILE):
         if not prompt_download():
             return
 
     try:
         limit = None if args.limit == "all" else int(args.limit)
-        cve_id = convert_wildcard(args.cve)
-        date_from, date_to = convert_year(args.year)
+        cve_id = dbq.convert_wildcard(args.cve)
+        date_from, date_to = dbq.convert_year(args.year)
 
-        kevs = query_kevs(
-            SQLITE_DB,
+        kevs = dbq.query_kevs(
+            Base.DB_FILE,
             cve_id=cve_id,
             vendor=args.vendor,
             since_date=date_from,
@@ -147,7 +147,7 @@ def handle_db(args):
         return
 
     # Exit if user declines download
-    if not os.path.exists(SQLITE_DB):
+    if not os.path.exists(Base.DB_FILE):
         if not prompt_download():
             sys.exit(1) 
             return
@@ -155,21 +155,21 @@ def handle_db(args):
     if args.update:
         try:
             console.print("[blue]Updating the CISA KEV database...[/blue]")
-            existing_cves = set(kev["cveID"] for kev in query_kevs(SQLITE_DB, limit=None))
+            existing_cves = set(kev["cveID"] for kev in dbq.query_kevs(Base.DB_FILE, limit=None))
             download_catalog()
-            updated_cves = set(kev["cveID"] for kev in query_kevs(SQLITE_DB, limit=None))
+            updated_cves = set(kev["cveID"] for kev in dbq.query_kevs(Base.DB_FILE, limit=None))
             new_entries = updated_cves - existing_cves
             if new_entries:
                 console.print(f"[green]Found {len(new_entries)} new KEVs[/green]")
-                new_kevs = [kev for kev in query_kevs(SQLITE_DB, limit=None) if kev["cveID"] in new_entries]
-                pretty_print_kevs(new_kevs)
+                new_kevs = [kev for kev in dbq.query_kevs(Base.DB_FILE, limit=None) if kev["cveID"] in new_entries]
+                dbq.pretty_print_kevs(new_kevs)
             else:
                 console.print("[cyan]Database is already up-to-date[/cyan]")
         except Exception as E:
             console.print(f"[red]An unexpected error occurred during update: {E}[/red]")
             sys.exit(1)
     else:
-        props = kev_db.load_properties_from_db(SQLITE_DB)
+        props = dbm.load_properties_from_db(Base.DB_FILE)
         if props:
             console.print(f"[bold]Database Version:[/bold] {props['catalogVersion']}")
             console.print(f"[bold]Last Published:[/bold] {props['dateReleased']}")

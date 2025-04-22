@@ -1,9 +1,9 @@
 import sqlite3
 import os
-from logger import init_logger
+from cisakev import logger
 import hashlib
 
-log = init_logger()
+log = logger.init_logger()
 
 # Schema definitions
 SCHEMA_CVES = '''

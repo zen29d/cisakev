@@ -1,8 +1,8 @@
 import os
 import requests
-from logger import init_logger
+from cisakev import logger
 
-log  = init_logger()
+log  = logger.init_logger()
 
 CONFIG_DIR = "config"
 WEBHOOK_CONFIG_FILE = os.path.join(CONFIG_DIR, "webhook.conf")
