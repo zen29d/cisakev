@@ -1,5 +1,5 @@
 
----
+
 
 # CISA KEV
 
@@ -7,7 +7,7 @@ A modular Python-based threat intelligence project centered around the [CISA Kno
 
 This project is divided into multiple sub-projects/modules.
 
----
+
 
 ## 🚀 Installation
 
@@ -28,7 +28,7 @@ This project is divided into multiple sub-projects/modules.
    pip install .
    ```
 
----
+
 
 ## 🧩 Sub-Projects
 
@@ -54,7 +54,7 @@ Install requirements manually (if not using editable install):
 pip install -r requirements.txt
 ```
 
----
+
 
 ## ⚙️ Configuration
 
@@ -71,7 +71,7 @@ Slack=https://hooks.slack.com/services/XXX/YYY/ZZZ
 Teams=https://your-teams-webhook-url
 ```
 
----
+
 
 ## 🖥️ Usage
 
@@ -91,7 +91,7 @@ python3 -m cisakev.watcher
 
 > Run `cisakev --help` for usage info
 
----
+
 
 ## ⏰ Cronjob Setup
 
@@ -105,7 +105,7 @@ Example: run every 3 hours
 
 > 🧠 Always use full paths for `python3` and your project directory to avoid environment issues with cron.
 
----
+
 
 ## 🔎 CLI Query Support
 
@@ -131,7 +131,7 @@ cisakev --help
 
 ![CLI Output](media/cli.png)
 
----
+
 
 ## 🛠️ Features in Progress
 
@@ -151,7 +151,7 @@ cisakev --help
   - ExploitDB
   - Other OSINT sources
 
----
+
 
 ## 🔔 Notifications
 
@@ -159,7 +159,7 @@ Slack/webhook alerts will display the latest added KEVs, their CVE IDs, vendors,
 
 ![KEV Watcher Notification](media/slack_notification.png)
 
----
+
 
 ## 📝 Logging
 
@@ -167,7 +167,7 @@ The system provides rich logs for terminal or file output (ideal for cron):
 
 ![KEV Watcher Logs](media/logs.png)
 
----
+
 
 ## ✅ Ideal For
 
@@ -177,7 +177,7 @@ The system provides rich logs for terminal or file output (ideal for cron):
 - SOC automation pipelines
 - Home labs and CTI research environments
 
----
+
 
 ## 👤 Author
 
