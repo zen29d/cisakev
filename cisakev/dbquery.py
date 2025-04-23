@@ -9,7 +9,7 @@ console = Console()
 DEFAULT_FIELDS = ["cveID", "vulnerabilityName", "dateAdded"]
 DISP_FIELDS = ["CVE ID", "Vulnerability Name", "KEV Added Date"]
 
-def query_kevs(SQLITE_DB, cve_id=None, vendor=None, since_date=None, until_date=None, limit=5):
+def query_kevs(SQLITE_DB, cve_id=None, vendor=None, since_date=None, until_date=None, limit=10):
     query = "SELECT * FROM catalog_kevs"
     conditions = []
     params = []

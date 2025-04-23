@@ -6,15 +6,17 @@ import csv
 from rich.console import Console
 
 # cisa_kev* modules
-from cisakev.kev import download_catalog 
-import cisakev.dbquery as dbq
-from cisakev.watcher import check_new_kev
-import cisakev.dbmanager as dbm
 from cisakev import Base
-from cisakev import logger 
+from cisakev import logger
+from cisakev.kev import download_catalog
+from cisakev.watcher import check_new_kev, run_daemon
+import cisakev.dbmanager as dbm
+import cisakev.dbquery as dbq
+
 
 log = logger.init_logger()
 console = Console()
+
 
 def show_help():
     console.print(
@@ -25,6 +27,7 @@ def show_help():
   cisakev db [--download | --update]
   cisakev list [options]
   cisakev export [options] --output FILE [--format FORMAT]
+  cisakev watcherd --start [--interval SECONDS]
 
 [bold]COMMANDS[/bold]
   [green]db[/green]           Manage the local KEV database.
@@ -35,7 +38,7 @@ def show_help():
                   [blue]--cve[/blue] <TEXT>     Filter by CVE ID (supports wildcard: e.g. CVE-2023, 2024-30088)
                   [blue]--vendor[/blue] <TEXT>  Filter by vendor/project name.
                   [blue]--year[/blue] <TEXT>    Filter by year range: 2024, 2023-, 2022+, 2021-2022
-                  [blue]--limit[/blue] <INTEGER | all>  Max number of results (use 'all' to show everything). Default: 5
+                  [blue]--limit[/blue] <INTEGER | all>  Max number of results (use 'all' to show everything). Default: 10
 
   [green]export[/green]       Export filtered KEVs to a file.
                   [blue]--cve[/blue] <TEXT>     Filter by CVE ID (supports wildcard: e.g. CVE-2023, 2024-30088)
@@ -45,11 +48,17 @@ def show_help():
                   [blue]--output[/blue] <PATH>    Output file path (e.g. results.json or results.csv). [required]
                   [blue]--format[/blue] <csv | json> Output format. Default: csv
 
+  [green]watcherd[/green]     Run the CISA KEV watcher daemon in the background.
+                  [blue]--start[/blue] Start watcher daemon (Default: 3600 secs).
+                  [blue]--interval[/blue] <SECONDS> Interval in seconds to check for new KEVs.
+
 [bold]EXAMPLES[/bold]
   cisakev db --download
   cisakev db --update
   cisakev list --vendor microsoft --year 2023+ --limit 10
   cisakev export --cve CVE-2025 --output export.csv  --format csv --limit all
+  cisakev watcherd --start
+  cisakev watcherd --start --interval 300
 """
     )
 
@@ -103,7 +112,7 @@ def handle_export(args):
             console.print("[yellow]No data to export based on the provided filters[/yellow]")
             return
 
-        with open(args.output, "w", encoding="utf-8") as f:
+        with open(args.output+"."+args.format, "w", encoding="utf-8") as f:
             if args.format == "json":
                 json.dump(kevs, f, indent=2)
             elif args.format == "csv":
@@ -177,6 +186,11 @@ def handle_db(args):
         else:
             console.print("[yellow]Could not retrieve database properties[/yellow]")
 
+def handle_watcherd(args):
+    if args.start:
+        interval = args.interval
+        run_daemon(interval)
+
 
 def main():
     if len(sys.argv) == 1:
@@ -200,7 +214,7 @@ def main():
     p_list.add_argument("--cve", type=str, help="Filter by CVE ID (wildcard supported)")
     p_list.add_argument("--vendor", type=str, help="Filter by vendor/project")
     p_list.add_argument("--year", type=str, help="Filter by year (e.g. 2025, 2024-, 2023+, 2024-2025)")
-    p_list.add_argument("--limit", type=str, default="5", help="Limit number of results (or 'all')")
+    p_list.add_argument("--limit", type=str, default="10", help="Limit number of results (or 'all')")
     p_list.set_defaults(func=handle_list)
 
     # export
@@ -209,13 +223,18 @@ def main():
     p_export.add_argument("--vendor", type=str, help="Filter by vendor/project")
     p_export.add_argument("--year", type=str, help="Filter by year (e.g. 2025, 2024-, 2023+, 2024-2025)")
     p_export.add_argument("--limit", type=str, default="50", help="Limit number of results (or 'all')")
-    p_export.add_argument("--output", type=str, required=True, help="Output file (e.g., output.json or .csv)")
+    p_export.add_argument("--output", type=str, default="export", help="Output file (e.g., output.json or .csv)")
     p_export.add_argument("--format", type=str, default="csv", choices=["json", "csv"], help="Output format")
     p_export.set_defaults(func=handle_export)
 
+    # watcher demon
+    p_wdaemon = subparsers.add_parser("watcherd", help="CISA KEV Watcher Daemon for new KEVs")
+    p_wdaemon.add_argument("--start", action="store_true", help="Start Watcher Daemon (default: 3600 secs)")
+    p_wdaemon.add_argument("--interval", type=int, default=3600, help="Interval in seconds")
+    p_wdaemon.set_defaults(func=handle_watcherd)
+
     args = parser.parse_args()
     args.func(args)
-
 
 if __name__ == "__main__":
     main()

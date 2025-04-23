@@ -1,3 +1,6 @@
+import time
+import sys
+import signal
 from datetime import datetime
 
 from cisakev import Base
@@ -49,6 +52,31 @@ def alert_new_kev():
         whook.send_notification(new_kevs, webhooks)
     else:
         log.info(f"No new KEVs detected")
+
+
+def run_daemon(interval=3600):  # default hourly
+    print(f"Starting CISA KEV watcher daemon with interval: {interval} seconds")
+    running = True
+
+    def signal_handler(sig, frame):
+        nonlocal running
+        print("\nStopping daemon...")
+        running = False
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    while running:
+        try:
+            alert_new_kev()
+        except Exception as e:
+            print(f"Error in alert_new_kev: {e}")
+        if running:
+            time.sleep(interval)
+
+    print("Daemon stopped")
+    sys.exit(0)
+
 
 if __name__ == "__main__":
     alert_new_kev()

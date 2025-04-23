@@ -81,7 +81,7 @@ def insert_kevs_to_db(db_path, kevs):
                         ", ".join(kev.get("cwes", []))
                     ))
                 except Exception as E:
-                    log.debug(f"Error inserting KEV {kev.get('cveID')}: {e}")
+                    log.debug(f"Error inserting KEV {kev.get('cveID')}: {E}")
             con.commit()
         return True
     except Exception as E:

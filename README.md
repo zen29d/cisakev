@@ -23,7 +23,7 @@ This project is divided into multiple sub-projects/modules.
    source venv/bin/activate
    ```
 
-3. Install the package in editable/development mode:
+3. Install the package locally:
    ```bash
    pip install .
    ```
@@ -100,7 +100,7 @@ You can set up a cronjob to monitor for new KEVs regularly.
 Example: run every 3 hours
 
 ```cron
-0 */3 * * * cd /usr/bin/python3 -m cisakev.watcher >> /var/log/cisakev.log 2>&1
+0 */3 * * * /usr/bin/python3 -m cisakev.watcher >> /var/log/cisakev.log 2>&1
 ```
 
 > 🧠 Always use full paths for `python3` and your project directory to avoid environment issues with cron.
@@ -120,6 +120,10 @@ cisakev query --date "2025-03-15"
 ```
 
 #### CLI Help
+
+```bash
+cisakev
+```
 
 ```bash
 cisakev --help
@@ -177,7 +181,9 @@ The system provides rich logs for terminal or file output (ideal for cron):
 - SOC automation pipelines
 - Home labs and CTI research environments
 
+## Version
 
+- Version: 1.0.0_alpha
 
 ## 👤 Author
 
