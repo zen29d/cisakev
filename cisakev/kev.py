@@ -1,7 +1,12 @@
+import os
+import sys
 import requests
 import json
-import os
 import hashlib
+
+runPath = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(runPath, ".."))
+
 from cisakev import logger
 from cisakev import Base
 import cisakev.dbmanager as dbm

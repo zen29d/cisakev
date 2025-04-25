@@ -1,13 +1,19 @@
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+import sys
 
-# Default logging
-LOG_DIR = "log"
-LOG_FILENAME = "cisa_kev.log"
+runPath = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(runPath, ".."))
 
-os.makedirs(LOG_DIR, exist_ok=True)
-LOG_FILE = log_file = os.path.join(LOG_DIR, LOG_FILENAME)
+from cisakev.Base import LOG_FILE
+
+# # Default logging
+# LOG_DIR = "log"
+# LOG_FILENAME = "cisa_kev.log"
+
+# os.makedirs(LOG_DIR, exist_ok=True)
+# LOG_FILE = log_file = os.path.join(LOG_DIR, LOG_FILENAME)
 
 def init_logger(log_file=LOG_FILE, console_quiet=False, logger_name=__name__, max_size=5*1024*1024, bk_count=3):
     logger = logging.getLogger(logger_name)

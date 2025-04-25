@@ -1,7 +1,11 @@
-import time
+import os
 import sys
+import time
 import signal
 from datetime import datetime
+
+runPath = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(runPath, ".."))
 
 from cisakev import Base
 from cisakev import kev

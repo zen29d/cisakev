@@ -1,9 +1,12 @@
-import argparse
 import os
 import sys
+import argparse
 import json
 import csv
 from rich.console import Console
+
+runPath = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(runPath, ".."))
 
 # cisa_kev* modules
 from cisakev import Base

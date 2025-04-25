@@ -1,5 +1,10 @@
 import os
+import sys
 import requests
+
+runPath = os.path.dirname(os.path.realpath(__file__))
+sys.path.append(os.path.join(runPath, ".."))
+
 from cisakev import logger
 
 log  = logger.init_logger()
