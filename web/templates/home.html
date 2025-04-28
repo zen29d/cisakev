@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% set active_page = "dashboard" %}
+
+{% block content %}
+
+{% if error != '' %}
+<div class="row p-3" id="syntax-error">
+	<div class="col-10 offset-1 border rounded border-danger p-3 ">
+		{{ error }}
+	</div>
+</div>
+
+{% endif %}
+
+<form action="{{ url_for('home') }}" class="row mb-3 align-items-center" method="post">
+	<div class="col-8 offset-1">
+		<input type="text" required="required" class="form-control" placeholder="Search.." value="{{ query_text }}"
+			name="query">
+	</div>
+	<div class="col-1">
+		<button type="submit" class="btn btn-primary w-100">Search</button>
+	</div>
+	<div class="col-2">
+		<button class="btn btn-success" type="button" id="syntax-help-btn" title="Syntax Help">
+			<span style="font-size: 15px;padding: 0%;margin: 0%;">&#9432;</span> Syntax Help
+		</button>
+	</div>
+</form>
+
+<div class="row p-3" id="syntax-help">
+	<div class="col-10 offset-1 border rounded border-white p-1 ">
+	<div class="card mb-2">
+		<div class="card-header bg-primary text-white">
+			✅ Valid Query Examples
+		</div>
+		<div class="card-body">
+			<pre><code>
+  # 1. Simple Equality
+  vendor:Microsoft
+  
+  # 2. Multiple Conditions with AND
+  vendor:Microsoft and product:Word
+  
+  # 3. Multiple Conditions with OR
+  vendor:Microsoft or product:Word
+  
+  # 4. Grouped Conditions with Parentheses
+  (vendor:Microsoft and product:Word) or product:Excel
+  
+  # 5. Wildcard / Partial Match using *
+  product:Word*
+  product:*Office*
+  
+  # 6. Date Range using BETWEEN
+  createdate:2025-01-01..2025-02-01
+  
+  # 7. Combination of LIKE and BETWEEN
+  vendor:Microsoft and createdate:2025-01-01..2025-02-01
+  
+  # 8. Complex Grouping with AND/OR
+  (vendor:Microsoft and product:Word*) or createdate:2025-01-01..2025-02-01
+  
+  # 9. All Supported Keys Together
+  cve:CVE-2025-24054 and vname:PrivilegeEscalation and notes:*important*
+  
+  # 10. Deep Nesting with Date Range
+  ((vendor:Microsoft and product:Word) or (vendor:Google and product:Docs)) and createdate:2024-12-01..2025-01-01
+		</code></pre>
+		</div>
+	</div>
+
+	<div class="card mb-4">
+		<div class="card-header bg-danger text-white">
+			❌ Invalid Query Examples
+		</div>
+		<div class="card-body">
+			<pre><code>
+  # 1. Unmatched Parenthesis
+  ((vendor:Microsoft and product:Word
+  
+  # 2. Unknown Key
+  somekey:value
+  
+  # 3. Missing Value
+  vendor:
+  
+  # 4. Missing Key
+  :value
+  
+  # 5. Invalid Format
+  vendor=Microsoft
+		</code></pre>
+		</div>
+	</div>
+
+	<div class="card">
+		<div class="card-header bg-secondary text-white">
+			🔑 Supported Keys (with mapped DB column names)
+		</div>
+		<div class="card-body">
+			<pre><code>
+  cve         → cveID
+  vendor      → vendorProject
+  product     → product
+  vname       → vulnerabilityName
+  dateadded   → dateAdded
+  desc        → shortDescription
+  action      → requiredAction
+  duedate     → dueDate
+  campaign    → knownRansomwareCampaignUse
+  notes       → notes
+  cwes        → cwes
+  createdate  → created_at
+		</code></pre>
+		</div>
+	</div>
+	</div>
+</div>
+
+
+
+
+{% if results_count > 0 %}
+<div class="row" id="search-count">
+	<div class="col-10 offset-1 pb-3">
+		<h5 class="text-white">Total {{ results_count }} records found.</h5>
+	</div>
+</div>
+{% endif %}
+
+<div class="row">
+	<div class="offset-lg-1 col-lg-10">
+		<div class="table-responsive">
+			<table class="table table-dark table-hover table-bordered text-bg-success">
+				<thead>
+					<tr>
+						<th>CVE ID</th>
+						<th>Vendor</th>
+						<th>Product</th>
+						<th>Vulnerability Name</th>
+						<th>Date</th>
+
+					</tr>
+				</thead>
+				<tbody>
+					{% for kevs in catalog_kevs %}
+					<tr>
+						<td style="color: rgba(172, 255, 47, 0.774);">{{ kevs['cveID'] }}</td>
+						<td style="color: rgba(172, 255, 47, 0.774);">{{ kevs['vendorProject'] }}</td>
+						<td style="color: rgba(172, 255, 47, 0.774);">{{ kevs['product'] }}</td>
+						<td style="color: rgba(172, 255, 47, 0.774);">{{ kevs['vulnerabilityName'] }}</td>
+						<td style="color: rgba(172, 255, 47, 0.774);">{{ kevs['dateAdded'] }}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+
+		{#
+		<!-- Pagination -->
+		<nav>
+			<ul class="pagination justify-content-center">
+				{% if page > 1 %}
+				<li class="page-item">
+					<a class="page-link" href="{{ url_for('home', page=page-1) }}">Previous</a>
+				</li>
+				{% endif %}
+
+				{% if page < total_pages %} <li class="page-item">
+					<a class="page-link" href="{{ url_for('home', page=page+1) }}">Next</a>
+					</li>
+					{% endif %}
+			</ul>
+		</nav>
+
+		#}
+	</div>
+</div>
+
+
+{% endblock %}
+
+{% block custome_js_scripts %}
+<script type="text/javascript">
+	$(document).ready(function () {
+
+		$("#syntax-help").hide();
+		$("#syntax-help-btn").click(function () {
+			$("#syntax-help").toggle();
+		})
+	})
+
+</script>
+{% endblock %}
