@@ -8,28 +8,6 @@ A modular Python-based threat intelligence project centered around the [CISA Kno
 This project is divided into multiple sub-projects/modules.
 
 
-
-## 🚀 Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/zen29d/cisakev.git
-   cd cisakev
-   ```
-
-2. (Optional) Create and activate a virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   ```
-
-3. Install the package locally:
-   ```bash
-   pip install .
-   ```
-
-
-
 ## 🧩 Sub-Projects
 
 ### 1. KEV Watcher
@@ -54,23 +32,61 @@ Install requirements manually (if not using editable install):
 pip install -r requirements.txt
 ```
 
+## ⚡ Simple Watcher
+
+The simplest form of a CISA KEV Watcher: it fetches the latest KEV list, detects new entries, and sends alerts to configured webhooks.
+
+If you don't need all the extra features, this version is designed for quick integration into automation and monitoring workflows.
+
+```
+simple/cisa_kev_watcher.py
+```
 
 
 ## ⚙️ Configuration
 
-Webhook configuration is required for notifications. Create a config file at:
+Webhook configuration is required for notifications. Add webhook URLs.
 
 `config/webhook.conf`
 
 ```conf
-# Example webhook.conf
-# This is a comment
-# Use one line per platform, no inline comments
-
 Slack=https://hooks.slack.com/services/XXX/YYY/ZZZ
-Teams=https://your-teams-webhook-url
+TeamsA=https://your-teamsa-webhook-url
+TeamsB=https://your-teamsb-webhook-url
 ```
 
+
+## ⏰ Cronjob
+
+You can set up a cronjob to monitor for new KEVs regularly.
+
+Example: run every hour
+
+```cron
+0 * * * * /usr/bin/python3 /opt/cisakev/simple/cisa_kev_watcher.py
+```
+
+> Use full path for `python3` and your project directory to avoid environment issues with cron.
+
+
+## 🚀 Full Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/zen29d/cisakev.git
+   cd cisakev
+   ```
+
+2. (Optional) Create and activate a virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. Install the package locally:
+   ```bash
+   pip install .
+   ```
 
 
 ## 🖥️ Usage
@@ -90,20 +106,6 @@ python3 -m cisakev.watcher
 ```
 
 > Run `cisakev --help` for usage info
-
-
-
-## ⏰ Cronjob Setup
-
-You can set up a cronjob to monitor for new KEVs regularly.
-
-Example: run every 3 hours
-
-```cron
-0 */3 * * * /usr/bin/python3 -m cisakev.watcher >> /var/log/cisakev.log 2>&1
-```
-
-> 🧠 Always use full paths for `python3` and your project directory to avoid environment issues with cron.
 
 
 
@@ -183,9 +185,6 @@ The system provides rich logs for terminal or file output (ideal for cron):
 
 ## Version
 
-- Version: 1.0.0_alpha
+- Version: 1.0.3_alpha
 
-## 👤 Author
-
-**Zen** — [GitHub](https://github.com/zen29d)  
 Part of ongoing CVE automation research and threat intelligence tooling

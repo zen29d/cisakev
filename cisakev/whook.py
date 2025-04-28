@@ -56,12 +56,13 @@ def send_notification(new_kevs, webhooks):
         log.info("No new KEVs to notify")
         return
     
-    message = "*🚨 New CISA KEVs Added! 🚨*\n"
-    for kev in new_kevs:
-        message += f"  *{kev['cveID']}*: {kev['vendorProject']} - {kev['product']} ({kev['vulnerabilityName']})\n"
-        message += f"  *Description:* {kev['shortDescription']}\n"
-        message += f"  *Added:* {kev['dateAdded']}\n"
-        message += f"  *More Info:* {kev['notes']}\n\n"
+    message = "*🚨 New CISA KEVs Added! 🚨*\n\n" + "\n\n".join(
+        f"*{kev['cveID']}*: {kev['vendorProject']} {kev['product']} - {kev['vulnerabilityName']}\n"
+        f"*Description:* {kev['shortDescription']}\n"
+        f"*Added:* {kev['dateAdded']}\n"
+        f"*More Info:* {kev['notes']}"
+        for kev in new_kevs
+    )
     
     payload = {"text": message}
     
