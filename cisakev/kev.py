@@ -7,8 +7,7 @@ import hashlib
 runPath = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(runPath, ".."))
 
-from cisakev import logger
-from cisakev import Base
+from cisakev import Base, logger
 import cisakev.dbmanager as dbm
 
 URL_CISA_KEV_JSON = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"

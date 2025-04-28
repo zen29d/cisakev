@@ -9,10 +9,9 @@ runPath = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.join(runPath, ".."))
 
 # cisa_kev* modules
-from cisakev import Base
-from cisakev import logger
+from cisakev import Base, logger
 from cisakev.kev import download_catalog
-from cisakev.watcher import check_new_kev, run_daemon
+from cisakev.notify import check_new_kev, watcher
 import cisakev.dbmanager as dbm
 import cisakev.dbquery as dbq
 
@@ -192,7 +191,7 @@ def handle_db(args):
 def handle_watcherd(args):
     if args.start:
         interval = args.interval
-        run_daemon(interval)
+        watcher(interval)
 
 
 def main():
