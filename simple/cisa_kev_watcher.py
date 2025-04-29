@@ -90,7 +90,6 @@ def send_notifications(new_kevs, webhooks):
             logging.error(f"Error sending notification to {app}: {e}")
 
 def main():
-    print("Main Start")
     latest_kevs = fetch_kev_data()
     previous_kevs = load_previous_kevs()
     if not previous_kevs:
@@ -98,13 +97,11 @@ def main():
         logging.info("Saved CISA KEVs Catalog")
         return
     webhooks = load_webhooks()
-    print("Main loaded old, latest, webhook")
 
     previous_ids = {kev["cveID"] for kev in previous_kevs}
     new_kevs = [kev for kev in latest_kevs if kev["cveID"] not in previous_ids]
 
     if new_kevs:
-        print("Inside NewKev")
         logging.info(f"Found {len(new_kevs)} new KEVs")
         send_notifications(new_kevs, webhooks)
         save_kevs(latest_kevs)
