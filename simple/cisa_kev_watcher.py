@@ -12,6 +12,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 STORAGE_FILE = os.path.join(SCRIPT_DIR, "data", "kev_seen.csv")
 WEBHOOK_CONFIG_FILE = os.path.join(SCRIPT_DIR, "config", "webhook.conf")
 LOG_FILE = os.path.join(SCRIPT_DIR, "logs", "cisa_kev.log")
+ASSETS_FILE = os.path.join(SCRIPT_DIR, "config", "assets_blacklist.txt")
 
 # Loging Setup
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
@@ -89,14 +90,21 @@ def send_notifications(new_kevs, webhooks):
             logging.error(f"Error sending notification to {app}: {e}")
 
 def main():
+    print("Main Start")
     latest_kevs = fetch_kev_data()
     previous_kevs = load_previous_kevs()
+    if not previous_kevs:
+        save_kevs(latest_kevs)
+        logging.info("Saved CISA KEVs Catalog")
+        return
     webhooks = load_webhooks()
+    print("Main loaded old, latest, webhook")
 
     previous_ids = {kev["cveID"] for kev in previous_kevs}
     new_kevs = [kev for kev in latest_kevs if kev["cveID"] not in previous_ids]
 
     if new_kevs:
+        print("Inside NewKev")
         logging.info(f"Found {len(new_kevs)} new KEVs")
         send_notifications(new_kevs, webhooks)
         save_kevs(latest_kevs)
