@@ -8,16 +8,17 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 sys.path.append(os.path.join(basedir, ".."))
 
 from cisakev import Base
- 
+
+path = os.path.join(basedir, Base.DB_FILE) 
 app = Flask(__name__)
-path = os.path.join("..",Base.DB_FILE)
  
+
 def get_db_connection():
-    print(Base.DB_FILE)
     conn = sqlite3.connect(path)
     conn.row_factory = sqlite3.Row
     return conn
  
+
 key_map = {
     "cve": "cveID",
     "vendor": "vendorProject",

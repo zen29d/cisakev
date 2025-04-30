@@ -32,7 +32,7 @@ Install requirements manually (if not using editable install):
 pip install -r requirements.txt
 ```
 
-## ⚡ Simple Watcher
+### ⚡ Simple Watcher
 
 The simplest form of a CISA KEV Watcher: it fetches the latest KEV list, detects new entries, and sends alerts to configured webhooks.
 
@@ -43,7 +43,7 @@ simple/cisa_kev_watcher.py
 ```
 
 
-## ⚙️ Configuration
+### ⚙️ Configuration
 
 Webhook configuration is required for notifications. Add webhook URLs.
 
@@ -56,9 +56,9 @@ TeamsB=https://your-teamsb-webhook-url
 ```
 
 
-## ⏰ Cronjob
+### ⏰ Cronjob
 
-You can set up a cronjob to monitor for new KEVs regularly.
+Set up a cronjob to monitor new KEVs regularly.
 
 Example: run every hour
 
@@ -79,8 +79,8 @@ Example: run every hour
 
 2. (Optional) Create and activate a virtual environment:
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate
+   python3 -m venv pycisa
+   source pycisa/bin/activate
    ```
 
 3. Install the package locally:
@@ -91,7 +91,7 @@ Example: run every hour
 
 ## 🖥️ Usage
 
-### ✅ Manual Execution
+### ✅ CLI Execution
 
 Run CLI directly from the shell after installing:
 
@@ -99,13 +99,7 @@ Run CLI directly from the shell after installing:
 cisakev
 ```
 
-Or, if want to execute watcher:
-
-```bash
-python3 -m cisakev.watcher
-```
-
-> Run `cisakev --help` for usage info
+![CLI Help](media/cli_help.png)
 
 
 
@@ -116,22 +110,19 @@ The CLI provides a flexible query system against the locally stored KEV database
 Example usage:
 
 ```bash
-cisakev query --cve CVE-2023-12345
-cisakev query --vendor "Cisco"
-cisakev query --date "2025-03-15"
+cisakev list --cve CVE-2023-12345
+cisakev list --vendor "Cisco"
+cisakev list --date "2025-03-15"
 ```
 
 #### CLI Help
 
 ```bash
 cisakev
-```
-
-```bash
 cisakev --help
+cisakev list --help
 ```
 
-![CLI Help](media/cli_help.png)
 
 #### Example Output
 
@@ -185,6 +176,6 @@ The system provides rich logs for terminal or file output (ideal for cron):
 
 ## Version
 
-- Version: 1.0.3_alpha
+- Version: 1.0.4_alpha
 
 Part of ongoing CVE automation research and threat intelligence tooling

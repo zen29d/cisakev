@@ -7,7 +7,7 @@ packages = ["cisakev"]
 
 [project]
 name = "cisakev"
-version = "1.0.3_alpha"
+version = "1.0.4_alpha"
 description = "CLI tool for interacting with the CISA Known Exploited Vulnerabilities (KEV) catalog"
 authors = [
     {name = "Zen (binarypanda)" }
