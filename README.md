@@ -68,8 +68,18 @@ Example: run every hour
 
 > Use full path for `python3` and your project directory to avoid environment issues with cron.
 
+> [!TIP]
+> Added Product Blacklist Support:
+> You can now filter out products you don't want to receive notifications.
+> - Create or edit the file at `config/product_blacklist.txt` and list vendor-project or product or combinations of both. 
+>   - e.g., `Apple` or `fortinetfortios` or `ColdFusion` one per line.
+> - The system defaults to `blacklist` mode. You can also switch to `whitelist` if needed.
 
-## 🚀 Full Installation
+
+
+
+### 2. CLI Tool
+### 🚀 Full Installation
 
 1. Clone the repository:
    ```bash
@@ -89,7 +99,7 @@ Example: run every hour
    ```
 
 
-## 🖥️ Usage
+### 🖥️ Usage
 
 ### ✅ CLI Execution
 
@@ -103,7 +113,7 @@ cisakev
 
 
 
-## 🔎 CLI Query Support
+#### 🔎 CLI Query Support
 
 The CLI provides a flexible query system against the locally stored KEV database.
 
@@ -138,7 +148,8 @@ cisakev list --help
   - CVSS / CWE scores
   - References and exploitability metadata
 
-- [x] **Queryable Data Store**
+- [x] **CLI and Queryable Data**
+  - CLI tool
   - Uses SQLite for fast lookup and filtering
   - Export options and stats available
 
@@ -148,6 +159,7 @@ cisakev list --help
   - ExploitDB
   - Other OSINT sources
 
+- [ ] **Web UI**
 
 
 ## 🔔 Notifications
