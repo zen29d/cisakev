@@ -65,13 +65,13 @@ Example: run every hour
 ```cron
 0 * * * * /usr/bin/python3 /opt/cisakev/simple/cisa_kev_watcher.py
 ```
-
-> Use full path for `python3` and your project directory to avoid environment issues with cron.
+> [!WARNING]
+> Use full path for `python3` in your project directory to avoid environment issues with cron.
 
 > [!TIP]
 > Added Product Blacklist Support:
-> You can now filter out products you don't want to receive notifications.
-> - Create or edit the file at `config/product_blacklist.txt` and list vendor-project or product or combinations of both. 
+> - You can now filter out products you don't want to receive notifications.
+> - Edit the file at `config/product_blacklist.txt` and list vendor-project or product or combinations of both. 
 >   - e.g., `Apple` or `fortinetfortios` or `ColdFusion` one per line.
 > - The system defaults to `blacklist` mode. You can also switch to `whitelist` if needed.
 
