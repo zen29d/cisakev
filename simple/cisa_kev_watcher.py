@@ -4,19 +4,79 @@ import logging
 import requests
 from io import StringIO
 
-# CISA KEV API Endpoint
+# CISA KEV Catalog URL
 CISA_KEV_URL = "https://www.cisa.gov/sites/default/files/csv/known_exploited_vulnerabilities.csv"
 
-# Path and Files
+# Paths and Files
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-STORAGE_FILE = os.path.join(SCRIPT_DIR, "data", "kev_seen.csv")
+STORAGE_FILE = os.path.join(SCRIPT_DIR, "local", "kev_seen.csv")
 WEBHOOK_CONFIG_FILE = os.path.join(SCRIPT_DIR, "config", "webhook.conf")
-LOG_FILE = os.path.join(SCRIPT_DIR, "logs", "cisa_kev.log")
-ASSETS_FILE = os.path.join(SCRIPT_DIR, "config", "assets_blacklist.txt")
+LOG_FILE = os.path.join(SCRIPT_DIR, "log", "cisa_kev.log")
+ASSETS_FILE = os.path.join(SCRIPT_DIR, "config", "product_blacklist.txt")
 
 # Loging Setup
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+
+def fetch_kev_data():
+    try:
+        response = requests.get(CISA_KEV_URL, timeout=10)
+        response.raise_for_status()
+        return list(csv.DictReader(StringIO(response.text)))
+    except Exception as e:
+        logging.error(f"Failed to fetch KEV data: {e}")
+        return []
+    
+
+def save_kevs(kevs):
+    if not kevs:
+        return
+    try:
+        os.makedirs(os.path.dirname(STORAGE_FILE), exist_ok=True)
+        with open(STORAGE_FILE, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=kevs[0].keys())
+            writer.writeheader()
+            writer.writerows(kevs)
+    except Exception as e:
+        logging.error(f"Error saving KEVs: {e}")
+
+
+def load_previous_kevs():
+    if not os.path.exists(STORAGE_FILE):
+        return []
+    try:
+        with open(STORAGE_FILE, encoding="utf-8") as f:
+            return list(csv.DictReader(f))
+    except Exception as e:
+        logging.error(f"Error loading previous KEVs: {e}")
+        return []
+
+
+def read_product_list(assets_file):
+    if not os.path.exists(assets_file):
+        open(assets_file, 'w').close()
+
+    with open(assets_file, 'r') as file:
+        assets = [line.strip().lower() for line in file if line.strip()]
+    return assets
+
+
+def filter_kevs(kevs, filter_type='blacklist'):
+    assets = read_product_list(ASSETS_FILE)
+    filtered_kevs = []
+    if filter_type not in ('blacklist', 'whitelist'):
+        logging.error("Invalid filter type. Use 'blacklist' or 'whitelist'")
+        return kevs
+
+    for kev in kevs:
+        combined = (kev["vendorProject"] + kev["product"]).lower()
+        match = any(asset in combined for asset in assets)
+        if (filter_type == 'whitelist' and match) or (filter_type == 'blacklist' and not match):
+            filtered_kevs.append(kev)
+
+    return filtered_kevs
+
 
 def load_webhooks():
     webhooks = {}
@@ -35,36 +95,6 @@ def load_webhooks():
                     logging.warning(f"Invalid webhook URL: {line.strip()}")
     return webhooks
 
-def fetch_kev_data():
-    try:
-        response = requests.get(CISA_KEV_URL, timeout=10)
-        response.raise_for_status()
-        return list(csv.DictReader(StringIO(response.text)))
-    except Exception as e:
-        logging.error(f"Failed to fetch KEV data: {e}")
-        return []
-
-def load_previous_kevs():
-    if not os.path.exists(STORAGE_FILE):
-        return []
-    try:
-        with open(STORAGE_FILE, encoding="utf-8") as f:
-            return list(csv.DictReader(f))
-    except Exception as e:
-        logging.error(f"Error loading previous KEVs: {e}")
-        return []
-
-def save_kevs(kevs):
-    if not kevs:
-        return
-    try:
-        os.makedirs(os.path.dirname(STORAGE_FILE), exist_ok=True)
-        with open(STORAGE_FILE, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=kevs[0].keys())
-            writer.writeheader()
-            writer.writerows(kevs)
-    except Exception as e:
-        logging.error(f"Error saving KEVs: {e}")
 
 def send_notifications(new_kevs, webhooks):
     if not new_kevs or not webhooks:
@@ -86,8 +116,9 @@ def send_notifications(new_kevs, webhooks):
                 logging.info(f"Notification sent: {app}")
             else:
                 logging.warning(f"Notification failed for {app}: {r.status_code}")
-        except Exception as e:
-            logging.error(f"Error sending notification to {app}: {e}")
+        except Exception as E:
+            logging.error(f"Error sending notification to {app}: {E}")
+
 
 def main():
     latest_kevs = fetch_kev_data()
@@ -97,14 +128,14 @@ def main():
         logging.info("Saved CISA KEVs Catalog")
         return
     webhooks = load_webhooks()
-
     previous_ids = {kev["cveID"] for kev in previous_kevs}
     new_kevs = [kev for kev in latest_kevs if kev["cveID"] not in previous_ids]
-
     if new_kevs:
         logging.info(f"Found {len(new_kevs)} new KEVs")
-        send_notifications(new_kevs, webhooks)
         save_kevs(latest_kevs)
+        kevs = filter_kevs(new_kevs)
+        if kevs:
+            send_notifications(kevs, webhooks)
     else:
         logging.info("No new KEVs found")
 
