@@ -188,6 +188,6 @@ The system provides rich logs for terminal or file output (ideal for cron):
 
 ## Version
 
-- Version: 1.0.4_alpha
+- Version: 1.1.0_alpha
 
 Part of ongoing CVE automation research and threat intelligence tooling
