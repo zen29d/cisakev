@@ -42,6 +42,7 @@ def check_new_kev(db_file=Base.DB_FILE):
         log.info(f"🚨 Found {len(new_items)} new KEVs")
         kev.save_catalog(latest_json)
         dbm.insert_kevs_to_db(db_file, new_items)
+        dbm.insert_properties(db_file, latest_props)
         return new_items
 
     return []

@@ -61,7 +61,7 @@ def load_seen_catalog(catalog_file=Base.CATALOG_FILE):
         log.warning(f"File {catalog_file} doesn't exist")
         return []
     try:
-        with open(Base.CATALOG_FILE, "r", newline="", encoding="utf-8") as file:
+        with open(catalog_file, "r", newline="", encoding="utf-8") as file:
             return json.load(file)
     except Exception as E:
         log.error(f"Error loading previous KEV data: {E}")
