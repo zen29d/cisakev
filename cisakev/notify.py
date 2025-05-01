@@ -4,13 +4,14 @@ import time
 import signal
 from datetime import datetime
 
-runPath = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(runPath, ".."))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from cisakev import Base, kev, whook, logger
+import Base
+from cisakev import kev, whook, logger
 from cisakev import dbmanager as dbm
 
 log = logger.init_logger()
+
 
 def is_new_release(prev_date, latest_date):
     try:
@@ -21,7 +22,8 @@ def is_new_release(prev_date, latest_date):
         log.error(f"Date comparison failed: {E}")
         return False
 
-def check_new_kev():
+
+def check_new_kev(db_file=Base.DB_FILE):
     previous_props, previous_kevs = kev.transform_catalog(kev.load_seen_catalog())
     if not previous_kevs:
         kev.download_catalog()
@@ -39,10 +41,11 @@ def check_new_kev():
         new_items = [kev for kev in latest_kevs if kev["cveID"] not in previous_ids]
         log.info(f"🚨 Found {len(new_items)} new KEVs")
         kev.save_catalog(latest_json)
-        dbm.insert_kevs_to_db(Base.DB_FILE, new_items)
+        dbm.insert_kevs_to_db(db_file, new_items)
         return new_items
 
     return []
+
 
 def alert_new_kev():
     webhooks = whook.load_webhook()

@@ -3,30 +3,26 @@ from logging.handlers import RotatingFileHandler
 import os
 import sys
 
-runPath = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(runPath, ".."))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from cisakev.Base import LOG_FILE
+import Base
 
-# # Default logging
-# LOG_DIR = "log"
-# LOG_FILENAME = "cisa_kev.log"
+# Log file size 5 MB
+LOG_SIZE = 5*1024*1024
+BK_COUNT = 3
 
-# os.makedirs(LOG_DIR, exist_ok=True)
-# LOG_FILE = log_file = os.path.join(LOG_DIR, LOG_FILENAME)
-
-def init_logger(log_file=LOG_FILE, console_quiet=False, logger_name=__name__, max_size=5*1024*1024, bk_count=3):
+def init_logger(log_file=Base.LOG_FILE, console_quiet=False, logger_name=__name__):
     logger = logging.getLogger(logger_name)
     logger.setLevel(logging.INFO)
 
     if not logger.handlers:
-        # File handler
-        file_handler =  RotatingFileHandler(log_file, mode='a', maxBytes=max_size, backupCount=bk_count)
+        # File log handler
+        file_handler =  RotatingFileHandler(log_file, mode='a', maxBytes=LOG_SIZE, backupCount=BK_COUNT)
         file_formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s', '%y-%m-%d %H:%M:%S')
         file_handler.setFormatter(file_formatter)
         logger.addHandler(file_handler)
 
-        # Console handler
+        # Console log handler
         if not console_quiet:
             stream_handler = logging.StreamHandler()
             stream_formatter = logging.Formatter('%(levelname)s: %(message)s')

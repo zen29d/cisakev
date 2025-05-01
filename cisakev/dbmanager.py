@@ -2,43 +2,14 @@ import os
 import sys
 import sqlite3
 import hashlib
+from contextlib import contextmanager
 
-runPath = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(runPath, ".."))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from cisakev import logger
+from cisakev.dbschema import schemas
 
 log = logger.init_logger()
-
-# Schema definitions
-SCHEMA_CVES = '''
-CREATE TABLE IF NOT EXISTS catalog_kevs (
-    cveID TEXT PRIMARY KEY,
-    vendorProject TEXT,
-    product TEXT,
-    vulnerabilityName TEXT,
-    dateAdded DATETIME,
-    shortDescription TEXT,
-    requiredAction TEXT,
-    dueDate DATETIME,
-    knownRansomwareCampaignUse TEXT,
-    notes TEXT,
-    cwes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-)
-'''
-
-SCHEMA_PROPERTIES = '''
-CREATE TABLE IF NOT EXISTS catalog_properties (
-    id INTEGER PRIMARY KEY CHECK (id = 1),
-    title TEXT,
-    catalogVersion TEXT,
-    dateReleased TEXT,
-    count INT,
-    catalog_hash TEXT,
-    db_hash TEXT
-)
-'''
 
 
 def db_exists(db_path):
@@ -52,17 +23,31 @@ def init_db(db_path):
     try:
         with sqlite3.connect(db_path) as con:
             cursor = con.cursor()
-            cursor.execute(SCHEMA_CVES)
-            cursor.execute(SCHEMA_PROPERTIES)
+            for schema in schemas:
+                cursor.execute(schema)
             con.commit()
         log.info("Database initialized")
     except Exception as E:
         log.error(f"Failed to initialize DB: {E}")
 
 
+@contextmanager
+def db_connection(db_path):
+    con = sqlite3.connect(db_path)
+    con.row_factory = sqlite3.Row
+    try:
+        yield con
+        con.commit()
+    except Exception:
+        con.rollback()
+        raise
+    finally:
+        con.close()
+
+
 def insert_kevs_to_db(db_path, kevs):
     try:
-        with sqlite3.connect(db_path) as con:
+        with db_connection(db_path) as con:
             cursor = con.cursor()
             for kev in kevs:
                 try:
@@ -87,15 +72,15 @@ def insert_kevs_to_db(db_path, kevs):
                     ))
                 except Exception as E:
                     log.debug(f"Error inserting KEV {kev.get('cveID')}: {E}")
-            con.commit()
         return True
     except Exception as E:
         log.error(f"Failed to insert KEVs: {E}")
         return False
 
+
 def insert_properties(db_path, properties):
     try:
-        with sqlite3.connect(db_path) as con:
+        with db_connection(db_path) as con:
             cursor = con.cursor()
             cursor.execute('''
                 INSERT OR REPLACE INTO catalog_properties (
@@ -109,7 +94,6 @@ def insert_properties(db_path, properties):
                 properties.get("catalog_hash", ""),
                 properties.get("db_hash", "")
             ))
-            con.commit()
         return True
     except Exception as E:
         log.error(f"Failed to insert properties: {E}")
@@ -120,12 +104,10 @@ def load_kevs_from_db(db_path):
     if not db_exists(db_path):
         return []
     try:
-        with sqlite3.connect(db_path) as con:
+        with db_connection(db_path) as con:
             cursor = con.cursor()
             cursor.execute("SELECT * FROM catalog_kevs")
-            rows = cursor.fetchall()
-            columns = [desc[0] for desc in cursor.description]
-        return [dict(zip(columns, row)) for row in rows]
+            return [dict(row) for row in cursor.fetchall()]
     except Exception as E:
         log.error(f"Failed to load KEVs: {E}")
         return []
@@ -135,14 +117,11 @@ def load_properties_from_db(db_path):
     if not db_exists(db_path):
         return {}
     try:
-        with sqlite3.connect(db_path) as con:
+        with db_connection(db_path) as con:
             cursor = con.cursor()
             cursor.execute("SELECT * FROM catalog_properties")
             rows = cursor.fetchall()
-            if not rows:
-                return {}
-            columns = [desc[0] for desc in cursor.description]
-            return dict(zip(columns, rows[0]))
+            return dict(rows[0]) if rows else {}
     except Exception as E:
         log.error(f"Failed to load properties: {E}")
         return {}
@@ -155,7 +134,7 @@ def get_db_catalog_ver(db_path):
 
 def get_db_kevs_hash(db_path):
     try:
-        with sqlite3.connect(db_path) as con:
+        with db_connection(db_path) as con:
             cursor = con.cursor()
             cursor.execute("SELECT cveID FROM catalog_kevs ORDER BY cveID")
             data = ''.join(row[0] for row in cursor.fetchall())

@@ -5,16 +5,15 @@ import json
 import csv
 from rich.console import Console
 
-runPath = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(runPath, ".."))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # cisa_kev* modules
-from cisakev import Base, logger
+import Base
+from cisakev import logger
 from cisakev.kev import download_catalog
 from cisakev.notify import check_new_kev, watcher
 import cisakev.dbmanager as dbm
 import cisakev.dbquery as dbq
-
 
 log = logger.init_logger()
 console = Console()

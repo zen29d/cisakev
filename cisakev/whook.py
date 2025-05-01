@@ -2,35 +2,30 @@ import os
 import sys
 import requests
 
-runPath = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(runPath, ".."))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import Base
 from cisakev import logger
 
 log  = logger.init_logger()
 
-CONFIG_DIR = "config"
-WEBHOOK_CONFIG_FILE = os.path.join(CONFIG_DIR, "webhook.conf")
 
-
-def load_webhook():
-    webhooks = {}
-    os.makedirs(CONFIG_DIR, exist_ok=True)
-    
-    if not os.path.exists(WEBHOOK_CONFIG_FILE):
-        log.warning(f"Webhook config file not found: {WEBHOOK_CONFIG_FILE}")
-        print(f"Missing webhook configuration file. Create: {WEBHOOK_CONFIG_FILE}")
+def load_webhook(webhook_file=Base.WEBHOOK_CONFIG_FILE):
+    webhooks = {}    
+    if not os.path.exists(webhook_file):
+        log.warning(f"Webhook config file not found: {webhook_file}")
+        print(f"Missing webhook configuration file. Create: {webhook_file}")
         print("format: appname:webhook_url")
         print("eg:")
         print("teams=https://your-teams-webhook-url")
         print("slack=https://your-slack-webhook-url")
         return webhooks
     
-    with open(WEBHOOK_CONFIG_FILE, "r", encoding="utf-8") as file:
+    with open(Base.WEBHOOK_CONFIG_FILE, "r", encoding="utf-8") as file:
         for line in file:
             line = line.strip()
             if not line or "=" not in line or line.startswith("#"):
-                continue  # Skip empty lines or malformed entries or commented
+                continue  # Skip empty lines or malformed
             
             parts = line.split("=", 1)
             if len(parts) != 2:
@@ -50,6 +45,7 @@ def load_webhook():
         log.warning("No valid webhook URLs found in configuration")
 
     return webhooks
+
 
 def send_notification(new_kevs, webhooks):
     if not new_kevs:
@@ -73,5 +69,5 @@ def send_notification(new_kevs, webhooks):
                 log.info(f"🔔 Notification sent successfully to {app}")
             else:
                 log.warning(f"Failed to send notification to {app}: {response.status_code}")
-        except requests.RequestException as e:
-            log.error(f"Error sending notification to {app}: {e}")
+        except requests.RequestException as E:
+            log.error(f"Error sending notification to {app}: {E}")

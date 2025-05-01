@@ -4,20 +4,20 @@ import requests
 import json
 import hashlib
 
-runPath = os.path.dirname(os.path.realpath(__file__))
-sys.path.append(os.path.join(runPath, ".."))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from cisakev import Base, logger
+import Base
+from cisakev import logger
 import cisakev.dbmanager as dbm
 
 URL_CISA_KEV_JSON = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 
-log = logger.init_logger(Base.LOG_FILE)
+log = logger.init_logger()
 
 
-def fetch_catalog_data():
+def fetch_catalog_data(url=URL_CISA_KEV_JSON):
     try:
-        response = requests.get(URL_CISA_KEV_JSON, timeout=5)
+        response = requests.get(url, timeout=5)
         if response.status_code == 200:
             return response.json()
         else:
@@ -48,17 +48,17 @@ def transform_catalog(json_data):
     return [properties, kev_rows]
 
 
-def save_catalog(json_data):
+def save_catalog(json_data, catalog_file=Base.CATALOG_FILE):
     try:
-        with open(Base.CATALOG_FILE, "w", encoding="utf-8") as f:
+        with open(catalog_file, "w", encoding="utf-8") as f:
             json.dump(json_data, f, indent=2)
     except Exception as E:
         log.error(f"Error saving KEV JSON data: {E}")
 
 
-def load_seen_catalog():
-    if not os.path.exists(Base.CATALOG_FILE):
-        log.warning(f"File {Base.CATALOG_FILE} doesn't exist")
+def load_seen_catalog(catalog_file=Base.CATALOG_FILE):
+    if not os.path.exists(catalog_file):
+        log.warning(f"File {catalog_file} doesn't exist")
         return []
     try:
         with open(Base.CATALOG_FILE, "r", newline="", encoding="utf-8") as file:
@@ -90,7 +90,7 @@ def get_file_hash(file):
 
 def download_catalog():
     try:
-        os.makedirs(Base.LOCAL, exist_ok=True)
+        os.makedirs(Base.LOCAL_DIR, exist_ok=True)
     except Exception as e:
         log.error(f"Failed to create storage directory: {e}")
         return
