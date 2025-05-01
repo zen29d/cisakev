@@ -38,6 +38,8 @@ The simplest form of a CISA KEV Watcher: it fetches the latest KEV list, detects
 
 If you don't need all the extra features, this version is designed for quick integration into automation and monitoring workflows.
 
+Its independent script, can be run standalone. 
+
 ```
 simple/cisa_kev_watcher.py
 ```
@@ -47,7 +49,7 @@ simple/cisa_kev_watcher.py
 
 Webhook configuration is required for notifications. Add webhook URLs.
 
-`config/webhook.conf`
+`simple/config/webhook.conf`
 
 ```conf
 Slack=https://hooks.slack.com/services/XXX/YYY/ZZZ
@@ -71,7 +73,7 @@ Example: run every hour
 > [!TIP]
 > Added Product Blacklist Support:
 > - You can now filter out products you don't want to receive notifications.
-> - Edit the file at `config/product_blacklist.txt` and list vendor-project or product or combinations of both. 
+> - Edit the file at `simple/config/product_blacklist.txt` and list vendor-project or product or combinations of both. 
 >   - e.g., `Apple` or `fortinetfortios` or `ColdFusion` one per line.
 > - The system defaults to `blacklist` mode. You can also switch to `whitelist` if needed.
 
